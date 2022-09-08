@@ -1,2 +1,7 @@
 .idea
 **/node_modules
+**/target
+*.iml
+*.zip
+**/dependency-reduced-pom.xml
+**/cdk.out
