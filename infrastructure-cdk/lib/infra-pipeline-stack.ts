@@ -21,7 +21,7 @@ export class InfraPipelineStack extends Stack {
                     "cd infrastructure-cdk",
                     "npm ci",
                     "npm run build",
-                    "npm cdk synth"
+                    "npx cdk synth"
                 ],
                 primaryOutputDirectory: 'infrastructure-cdk/cdk.out'
             })

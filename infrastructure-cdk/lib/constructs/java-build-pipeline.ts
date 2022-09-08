@@ -9,7 +9,6 @@ import {
     S3DeployAction,
     S3SourceAction
 } from "aws-cdk-lib/aws-codepipeline-actions";
-import * as path from "path";
 import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import {Aws, Duration} from "aws-cdk-lib";
 import {PolicyStatement} from "aws-cdk-lib/aws-iam";
@@ -116,7 +115,7 @@ export class JavaBuildPipeline extends Construct {
         });
 
         const versionUpdateFn = new Function(this, 'version-update-fn', {
-            code: Code.fromAsset(path.join(__dirname, '../../flink-app-redeploy-hook')),
+            code: Code.fromAsset('flink-app-redeploy-hook'),
             handler: "app.lambda_handler",
             runtime: Runtime.PYTHON_3_9,
             environment: {
