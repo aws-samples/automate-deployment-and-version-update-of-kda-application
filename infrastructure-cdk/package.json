@@ -1,5 +1,5 @@
 {
-  "name": "pro",
+  "name": "infrastructure-cdk",
   "version": "0.1.0",
   "bin": {
     "pro": "bin/pro.js"
@@ -21,8 +21,8 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.40.0",
-    "@aws-cdk/aws-kinesisanalytics-flink-alpha": "2.40.0-alpha.0",
+    "aws-cdk-lib": "2.41.0",
+    "@aws-cdk/aws-kinesisanalytics-flink-alpha": "2.41.0-alpha.0",
     "constructs": "^10.0.0"
   }
 }

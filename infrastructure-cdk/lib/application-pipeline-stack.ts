@@ -17,7 +17,7 @@ export class ApplicationPipelineStack extends Stack {
             removalPolicy: RemovalPolicy.DESTROY
         });
 
-        new JavaBuildPipeline(this, 'java-app', {
+        const javaBuildPipeline = new JavaBuildPipeline(this, 'java-app', {
             appName: APPLICATION_NAME,
             deployBucket: artifactBucket,
             repositoryName: APPLICATION_NAME
@@ -32,6 +32,11 @@ export class ApplicationPipelineStack extends Stack {
         new CfnOutput(this, 'ArtifactBucketLink', {
             value: "https://s3.console.aws.amazon.com/s3/buckets/" + artifactBucket.bucketName + "?region=" + Aws.REGION + "&tab=objects",
             description: "Artifact Bucket Link"
+        });
+
+        new CfnOutput(this, 'ApplicationCodePipelineLink', {
+            value: "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/" + javaBuildPipeline.pipeline.pipelineName + "/view?region=" + Aws.REGION,
+            description: "Application AWS CodePipeline Link"
         });
 
     }

@@ -25,6 +25,8 @@ interface JavaBuildPipelineProps {
 }
 
 export class JavaBuildPipeline extends Construct {
+    readonly pipeline: Pipeline
+
     constructor(scope: Construct, id: string, props: JavaBuildPipelineProps) {
         super(scope, id);
 
@@ -73,7 +75,7 @@ export class JavaBuildPipeline extends Construct {
 
         const buildOutput = new Artifact();
 
-        const pipeline = new Pipeline(this, 'CodePipeline', {
+        this.pipeline = new Pipeline(this, 'CodePipeline', {
             stages: [
                 // In real world use code snippet like below to work with repository
                 //
@@ -134,7 +136,7 @@ export class JavaBuildPipeline extends Construct {
             actions: ["codepipeline:PutJobSuccessResult", "codepipeline:PutJobFailureResult"]
         }));
 
-        pipeline.addStage({
+        this.pipeline.addStage({
             stageName: "deploy", actions: [new LambdaInvokeAction({
                 actionName: "Deploy",
                 lambda: versionUpdateFn
