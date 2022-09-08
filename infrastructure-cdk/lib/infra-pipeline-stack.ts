@@ -1,20 +1,22 @@
-import {Stack, StackProps} from 'aws-cdk-lib';
+import {Fn, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {CodePipeline, ShellStep} from "aws-cdk-lib/pipelines";
+import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {RealtimeApplication} from "./real-time-application";
-import {REPOSITORY_FILE_PATH} from "./shared-vars";
+import {Bucket} from "aws-cdk-lib/aws-s3";
+import {BUCKET_NAME_OUTPUT} from "aws-cdk/lib";
+import {SOURCE_CODE_ZIP} from "./shared-vars";
 
 export class InfraPipelineStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
+        const artifactBucket = Bucket.fromBucketName(this, 'artifactBucket-import', Fn.importValue(BUCKET_NAME_OUTPUT))
 
         const pipeline = new CodePipeline(this, 'Pipeline', {
             selfMutation: false,
             synth: new ShellStep('Synth', {
+                input: CodePipelineSource.s3(artifactBucket, SOURCE_CODE_ZIP),
                 commands: [
-                    "curl " + REPOSITORY_FILE_PATH + " --output app.zip",
-                    "unzip app.zip",
                     "cd infrastructure-cdk",
                     "npm ci",
                     "npm run build",

@@ -6,17 +6,22 @@ import {
     CodeBuildAction,
     LambdaInvokeAction,
     ManualApprovalAction,
-    S3DeployAction
+    S3DeployAction,
+    S3SourceAction
 } from "aws-cdk-lib/aws-codepipeline-actions";
-import {IFunction} from "aws-cdk-lib/aws-lambda/lib/function-base";
+import * as path from "path";
+import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Aws, Duration} from "aws-cdk-lib";
+import {PolicyStatement} from "aws-cdk-lib/aws-iam";
+import {SOURCE_CODE_ZIP} from "../shared-vars";
 
 
 interface JavaBuildPipelineProps {
+    appName: string
     repositoryName: string
     deployBucket: IBucket
     projectRoot?: string
     deployBucketBasePath?: string
-    postActionLambda?: IFunction
 }
 
 export class JavaBuildPipeline extends Construct {
@@ -43,8 +48,6 @@ export class JavaBuildPipeline extends Construct {
                 },
                 build: {
                     commands: [
-                        `curl ${props.repositoryName} --output app.zip`, // Download zip directly from Github
-                        'unzip app.zip',
                         `cd ${directory}`,
                         'mvn clean package -B',
                         `mkdir -p ${s3BasePath}`,
@@ -84,8 +87,16 @@ export class JavaBuildPipeline extends Construct {
                 //     })]
                 // },
                 {
+                    stageName: "source", actions: [new S3SourceAction({
+                        output: sourceAsset,
+                        actionName: "Checkout",
+                        bucket: props.deployBucket,
+                        bucketKey: SOURCE_CODE_ZIP
+                    })]
+                },
+                {
                     stageName: "build", actions: [new CodeBuildAction({
-                        actionName: "CodeBuild", input: sourceAsset, project: project, outputs: [buildOutput]
+                        input: sourceAsset, actionName: "CodeBuild", project: project, outputs: [buildOutput]
                     })]
                 }, {
                     stageName: "saveArtefact", actions: [new S3DeployAction({
@@ -102,13 +113,33 @@ export class JavaBuildPipeline extends Construct {
                 }]
         });
 
-        if (props.postActionLambda) {
-            pipeline.addStage({
-                stageName: "deploy", actions: [new LambdaInvokeAction({
-                    actionName: "Deploy",
-                    lambda: props.postActionLambda
-                })]
-            });
-        }
+        const versionUpdateFn = new Function(this, 'version-update-fn', {
+            code: Code.fromAsset(path.join(__dirname, '../../flink-app-redeploy-hook')),
+            handler: "app.lambda_handler",
+            runtime: Runtime.PYTHON_3_9,
+            environment: {
+                ASSET_BUCKET_ARN: props.deployBucket.bucketArn,
+                FILE_KEY: s3BasePath + "/" + props.appName + "-latest.jar",
+                APP_NAME: props.appName
+            },
+            timeout: Duration.minutes(1)
+        });
+
+        versionUpdateFn.addToRolePolicy(new PolicyStatement({
+            actions: ["kinesisanalytics:DescribeApplication", "kinesisanalytics:UpdateApplication"],
+            resources: ["arn:aws:kinesisanalytics:" + Aws.REGION + ":" + Aws.ACCOUNT_ID + ":application/*"]
+        }));
+        versionUpdateFn.addToRolePolicy(new PolicyStatement({
+            resources: ["*"],
+            actions: ["codepipeline:PutJobSuccessResult", "codepipeline:PutJobFailureResult"]
+        }));
+
+        pipeline.addStage({
+            stageName: "deploy", actions: [new LambdaInvokeAction({
+                actionName: "Deploy",
+                lambda: versionUpdateFn
+            })]
+        });
+
     }
 }
