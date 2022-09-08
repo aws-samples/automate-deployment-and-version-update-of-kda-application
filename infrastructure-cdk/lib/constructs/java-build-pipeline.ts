@@ -99,9 +99,9 @@ export class JavaBuildPipeline extends Construct {
                         input: sourceAsset, actionName: "CodeBuild", project: project, outputs: [buildOutput]
                     })]
                 }, {
-                    stageName: "saveArtefact", actions: [new S3DeployAction({
+                    stageName: "saveArtifact", actions: [new S3DeployAction({
                         bucket: props.deployBucket,
-                        actionName: "SaveArtefact",
+                        actionName: "SaveArtifact",
                         input: buildOutput,
                         extract: true
                     })]

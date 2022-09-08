@@ -8,7 +8,7 @@ export class ApplicationPipelineStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
-        const artifactBucket = new Bucket(this, 'ArtefactBucket', {
+        const artifactBucket = new Bucket(this, 'ArtifactBucket', {
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
             encryption: BucketEncryption.S3_MANAGED,
