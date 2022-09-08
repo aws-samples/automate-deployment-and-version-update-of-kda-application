@@ -29,6 +29,7 @@ export class ApplicationStack extends Stack {
         stream.grantWrite(dataSourceFn);
 
         const application = new kda.Application(this, 'app', {
+                applicationName: APPLICATION_NAME,
                 code: kda.ApplicationCode.fromBucket(assetBucket, "jars/" + APPLICATION_NAME + "-latest.jar"),
                 runtime: kda.Runtime.FLINK_1_13,
                 propertyGroups: {
