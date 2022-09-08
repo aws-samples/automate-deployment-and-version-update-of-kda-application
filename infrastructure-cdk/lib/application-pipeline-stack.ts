@@ -20,7 +20,8 @@ export class ApplicationPipelineStack extends Stack {
         const javaBuildPipeline = new JavaBuildPipeline(this, 'java-app', {
             appName: APPLICATION_NAME,
             deployBucket: artifactBucket,
-            repositoryName: APPLICATION_NAME
+            repositoryName: APPLICATION_NAME,
+            projectRoot: APPLICATION_NAME
         });
 
         new CfnOutput(this, 'ArtifactBucketName', {
