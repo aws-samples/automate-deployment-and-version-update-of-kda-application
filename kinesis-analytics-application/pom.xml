@@ -4,7 +4,7 @@
 
     <groupId>com.amazon.aws.blog</groupId>
     <artifactId>kinesis-analytics-application</artifactId>
-    <version>1.0.0</version>
+    <version>latest</version>
     <packaging>jar</packaging>
 
     <name>Amazon Kinesis Data Analytics Sample Job</name>
