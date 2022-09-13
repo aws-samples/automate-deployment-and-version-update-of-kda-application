@@ -1,4 +1,4 @@
-import {Aws, Fn, Stack, StackProps} from 'aws-cdk-lib';
+import {Aws, Fn, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Bucket} from "aws-cdk-lib/aws-s3";
 import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME} from "./shared-vars";
@@ -40,7 +40,8 @@ export class ApplicationStack extends Stack {
                     },
                 },
                 snapshotsEnabled: false,
-                parallelismPerKpu: 1
+                parallelismPerKpu: 1,
+                removalPolicy: RemovalPolicy.DESTROY
             }
         );
 

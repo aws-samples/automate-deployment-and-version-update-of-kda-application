@@ -3,7 +3,7 @@ import {Construct} from 'constructs';
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {RealtimeApplication} from "./real-time-application";
 import {Bucket} from "aws-cdk-lib/aws-s3";
-import {ASSET_BUCKET_EXPORT_NAME, SOURCE_CODE_ZIP} from "./shared-vars";
+import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME, SOURCE_CODE_ZIP} from "./shared-vars";
 
 export class InfraPipelineStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
@@ -32,6 +32,11 @@ export class InfraPipelineStack extends Stack {
         new CfnOutput(this, 'InfraCodePipelineLink', {
             value: "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/" + pipelineName + "/view?region=" + Aws.REGION,
             description: "Infrastructure AWS CodePipeline Link"
+        });
+
+        new CfnOutput(this, 'KDAApplicationLink', {
+            value: "https://console.aws.amazon.com/kinesisanalytics/home?region=" + Aws.REGION + "#/application/" + APPLICATION_NAME + "/details/monitoring",
+            description: "Amazon Kinesis Data Analytics application Link"
         });
     }
 }
