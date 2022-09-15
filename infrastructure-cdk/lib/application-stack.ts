@@ -5,9 +5,16 @@ import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME} from "./shared-vars";
 import {Stream, StreamEncryption, StreamMode} from "aws-cdk-lib/aws-kinesis";
 import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import * as kda from "@aws-cdk/aws-kinesisanalytics-flink-alpha";
+import {ApplicationRuntime} from "./constructs/application-runtime";
+
+interface ApplicationStackProps {
+    runtime: ApplicationRuntime,
+    jarfile?: string
+}
+
 
 export class ApplicationStack extends Stack {
-    constructor(scope: Construct, id: string, props?: StackProps) {
+    constructor(scope: Construct, id: string, appProps: ApplicationStackProps, props?: StackProps) {
         super(scope, id, props);
         const assetBucket = Bucket.fromBucketName(this, 'imported-asset-bucket', Fn.importValue(ASSET_BUCKET_EXPORT_NAME));
 
@@ -28,18 +35,33 @@ export class ApplicationStack extends Stack {
 
         stream.grantWrite(dataSourceFn);
 
+        let propertyGroups: any = {
+            "KinesisReader": {
+                "input.stream.name": stream.streamName,
+                "aws.region": Aws.REGION,
+                "flink.stream.initpos": "LATEST"
+            }
+        };
+
+        let binaryPath = "jars/" + APPLICATION_NAME + "-latest.jar";
+        if (appProps.runtime == ApplicationRuntime.PYTHON) {
+            binaryPath = "python-binaries/" + APPLICATION_NAME + "-latest.zip";
+            propertyGroups["kinesis.analytics.flink.run.options"] = {
+                "python": "app.py",
+                "pyFiles": "dependencies"
+            };
+            if (appProps.jarfile) {
+                propertyGroups["kinesis.analytics.flink.run.options"]["jarfile"] = appProps.jarfile;
+            }
+        }
+
+
         const application = new kda.Application(this, 'app', {
                 applicationName: APPLICATION_NAME,
-                code: kda.ApplicationCode.fromBucket(assetBucket, "jars/" + APPLICATION_NAME + "-latest.jar"),
+                code: kda.ApplicationCode.fromBucket(assetBucket, binaryPath),
                 runtime: kda.Runtime.FLINK_1_13,
-                propertyGroups: {
-                    "KinesisReader": {
-                        "input.stream.name": stream.streamName,
-                        "aws.region": Aws.REGION,
-                        "flink.stream.initpos": "LATEST"
-                    },
-                },
-                snapshotsEnabled: false,
+                propertyGroups: propertyGroups,
+                snapshotsEnabled: false, // true for the real environment
                 parallelismPerKpu: 1,
                 removalPolicy: RemovalPolicy.DESTROY
             }

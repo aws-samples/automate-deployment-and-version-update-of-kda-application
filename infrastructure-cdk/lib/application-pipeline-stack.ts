@@ -2,7 +2,9 @@ import {Aws, CfnOutput, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {JavaBuildPipeline} from "./constructs/java-build-pipeline";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
-import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME} from "./shared-vars";
+import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME, BUILD_FOR_RUNTIME} from "./shared-vars";
+import {ApplicationRuntime} from "./constructs/application-runtime";
+import {PythonBuildPipeline} from "./constructs/python-build-pipeline";
 
 export class ApplicationPipelineStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
@@ -17,12 +19,22 @@ export class ApplicationPipelineStack extends Stack {
             removalPolicy: RemovalPolicy.DESTROY
         });
 
-        const javaBuildPipeline = new JavaBuildPipeline(this, 'java-app', {
-            appName: APPLICATION_NAME,
-            deployBucket: artifactBucket,
-            repositoryName: APPLICATION_NAME,
-            projectRoot: APPLICATION_NAME
-        });
+        let buildPipeline;
+        // @ts-ignore
+        if (BUILD_FOR_RUNTIME == ApplicationRuntime.JAVA)
+            buildPipeline = new JavaBuildPipeline(this, 'java-app', {
+                appName: APPLICATION_NAME,
+                deployBucket: artifactBucket,
+                repositoryName: APPLICATION_NAME,
+                projectRoot: APPLICATION_NAME
+            });
+        else
+            buildPipeline = new PythonBuildPipeline(this, 'python-app', {
+                appName: APPLICATION_NAME,
+                deployBucket: artifactBucket,
+                repositoryName: APPLICATION_NAME,
+                projectRoot: APPLICATION_NAME
+            });
 
         new CfnOutput(this, 'ArtifactBucketName', {
             value: artifactBucket.bucketName,
@@ -36,7 +48,7 @@ export class ApplicationPipelineStack extends Stack {
         });
 
         new CfnOutput(this, 'ApplicationCodePipelineLink', {
-            value: "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/" + javaBuildPipeline.pipeline.pipelineName + "/view?region=" + Aws.REGION,
+            value: "https://console.aws.amazon.com/codesuite/codepipeline/pipelines/" + buildPipeline.pipeline.pipelineName + "/view?region=" + Aws.REGION,
             description: "Application AWS CodePipeline Link"
         });
 

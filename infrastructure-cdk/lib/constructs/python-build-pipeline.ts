@@ -15,7 +15,7 @@ import {PolicyStatement} from "aws-cdk-lib/aws-iam";
 import {SOURCE_CODE_ZIP} from "../shared-vars";
 
 
-interface JavaBuildPipelineProps {
+interface PythonBuildPipelineProps {
     appName: string
     repositoryName: string
     deployBucket: IBucket
@@ -23,14 +23,14 @@ interface JavaBuildPipelineProps {
     deployBucketBasePath?: string
 }
 
-export class JavaBuildPipeline extends Construct {
+export class PythonBuildPipeline extends Construct {
     readonly pipeline: Pipeline
 
-    constructor(scope: Construct, id: string, props: JavaBuildPipelineProps) {
+    constructor(scope: Construct, id: string, props: PythonBuildPipelineProps) {
         super(scope, id);
 
         let directory = ".";
-        let s3BasePath = "jars";
+        let s3BasePath = "python-binaries";
         if (props.projectRoot) {
             directory = props.projectRoot;
         }
@@ -44,23 +44,24 @@ export class JavaBuildPipeline extends Construct {
             phases: {
                 install: {
                     "runtime-versions": {
-                        "java": "corretto11"
+                        "python": "3.x"
                     }
                 },
                 build: {
                     commands: [
                         `cd ${directory}`,
-                        'mvn clean package -B',
+                        'mkdir dependencies',
+                        'pip3 install -r requirements.txt -t dependencies',
                         `mkdir -p ${s3BasePath}`,
-                        `cp target/*.jar ${s3BasePath}/`
+                        `zip -r ${s3BasePath}/${props.appName}-latest.zip *.py lib/* dependencies`
                     ]
                 }
             },
             artifacts: {
                 files: [
-                    `${s3BasePath}/*.jar`
+                    `${s3BasePath}/${props.appName}.zip`
                 ],
-                'discard-paths': false,
+                'discard-paths': true,
                 'base-directory': directory
             }
         });
@@ -120,7 +121,7 @@ export class JavaBuildPipeline extends Construct {
             runtime: Runtime.PYTHON_3_9,
             environment: {
                 ASSET_BUCKET_ARN: props.deployBucket.bucketArn,
-                FILE_KEY: s3BasePath + "/" + props.appName + "-latest.jar",
+                FILE_KEY: s3BasePath + "/" + props.appName + "-latest.zip",
                 APP_NAME: props.appName
             },
             timeout: Duration.minutes(1)
