@@ -59,9 +59,9 @@ export class PythonBuildPipeline extends Construct {
             },
             artifacts: {
                 files: [
-                    `${s3BasePath}/${props.appName}.zip`
+                    `${s3BasePath}/*.zip`
                 ],
-                'discard-paths': true,
+                'discard-paths': false,
                 'base-directory': directory
             }
         });
