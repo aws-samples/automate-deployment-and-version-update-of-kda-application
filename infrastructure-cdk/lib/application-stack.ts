@@ -48,7 +48,7 @@ export class ApplicationStack extends Stack {
             binaryPath = "python-binaries/" + APPLICATION_NAME + "-latest.zip";
             propertyGroups["kinesis.analytics.flink.run.options"] = {
                 "python": "app.py",
-                "pyFiles": "dependencies"
+                "pyFiles": "dependencies/"
             };
             if (appProps.jarfile) {
                 propertyGroups["kinesis.analytics.flink.run.options"]["jarfile"] = appProps.jarfile;
