@@ -10,6 +10,20 @@ table_env = StreamTableEnvironment.create(environment_settings=env_settings)
 APPLICATION_PROPERTIES_FILE_PATH = "/etc/flink/application_properties.json"
 
 
+is_local = (
+    True if os.environ.get("IS_LOCAL") else False
+)
+
+if is_local:
+    # only for local, overwrite variable to properties and pass in your jars delimited by a semicolon (;)
+    APPLICATION_PROPERTIES_FILE_PATH = "application_properties.json"  # local
+
+    CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+    table_env.get_config().get_configuration().set_string(
+        "pipeline.jars",
+        "file:///" + CURRENT_DIR + "/lib/flink-sql-connector-kinesis_2.12-1.13.2.jar",
+        )
+
 def get_application_properties():
     if os.path.isfile(APPLICATION_PROPERTIES_FILE_PATH):
         with open(APPLICATION_PROPERTIES_FILE_PATH, "r") as file:
