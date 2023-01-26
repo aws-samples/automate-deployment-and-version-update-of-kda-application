@@ -2,7 +2,7 @@ import {Aws, CfnOutput, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {JavaBuildPipeline} from "./constructs/java-build-pipeline";
 import {BlockPublicAccess, Bucket, BucketEncryption} from "aws-cdk-lib/aws-s3";
-import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME, BUILD_FOR_RUNTIME} from "./shared-vars";
+import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME, BUILD_FOR_RUNTIME, SOURCE_CODE_ZIP} from "./shared-vars";
 import {ApplicationRuntime} from "./constructs/application-runtime";
 import {PythonBuildPipeline} from "./constructs/python-build-pipeline";
 
@@ -26,14 +26,14 @@ export class ApplicationPipelineStack extends Stack {
                 appName: APPLICATION_NAME,
                 deployBucket: artifactBucket,
                 repositoryName: APPLICATION_NAME,
-                projectRoot: APPLICATION_NAME
+                projectRoot: SOURCE_CODE_ZIP.replace(".zip", "") + "/" + APPLICATION_NAME
             });
         else
             buildPipeline = new PythonBuildPipeline(this, 'python-app', {
                 appName: APPLICATION_NAME,
                 deployBucket: artifactBucket,
                 repositoryName: APPLICATION_NAME,
-                projectRoot: APPLICATION_NAME
+                projectRoot: SOURCE_CODE_ZIP.replace(".zip", "") + "/" + APPLICATION_NAME
             });
 
         new CfnOutput(this, 'ArtifactBucketName', {

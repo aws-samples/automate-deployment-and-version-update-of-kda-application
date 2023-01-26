@@ -18,12 +18,12 @@ export class InfraPipelineStack extends Stack {
             synth: new ShellStep('Synth', {
                 input: CodePipelineSource.s3(artifactBucket, SOURCE_CODE_ZIP),
                 commands: [
-                    "cd infrastructure-cdk",
+                    "cd " + SOURCE_CODE_ZIP.replace(".zip", "") + "/infrastructure-cdk",
                     "npm ci",
                     "npm run build",
                     "npx cdk synth"
                 ],
-                primaryOutputDirectory: 'infrastructure-cdk/cdk.out'
+                primaryOutputDirectory: SOURCE_CODE_ZIP.replace(".zip", "") + '/infrastructure-cdk/cdk.out'
             })
         });
 
