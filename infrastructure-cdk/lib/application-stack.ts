@@ -69,5 +69,27 @@ export class ApplicationStack extends Stack {
 
         stream.grantRead(application);
 
+        // Wait for the build artifact to be initialized
+        const flinkArtifactCreatedHook = new Function(this, 'FlinkArtifactCreatedHook', {
+            runtime: Runtime.PYTHON_3_9,
+            code: Code.fromAsset('./infrastructure/flink-artifact-created-hook'),
+            handler: 'app.on_event',
+            architecture: Architecture.ARM_64,
+            timeout: Duration.minutes(15),
+            environment: {
+                BUCKET_NAME: assetBucket.bucketName,
+                FILE_NAME: binaryPath,
+            }
+        });
+        assetBucket.grantRead(flinkArtifactCreatedHook);
+
+        const flinkArtifactCreatedHookProvider = new Provider(this, 'FlinkArtifactCreatedHookProvider', {
+            onEventHandler: flinkArtifactCreatedHook
+        });
+        const flinkArtifactCreatedHookCustomResource = new CustomResource(this, 'FlinkArtifactCreatedHookCustomResource', {
+            serviceToken: flinkArtifactCreatedHookProvider.serviceToken
+        });
+
+        this.application.node.addDependency(flinkArtifactCreatedHookCustomResource);
     }
 }
