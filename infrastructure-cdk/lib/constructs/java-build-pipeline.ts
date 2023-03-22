@@ -44,7 +44,7 @@ export class JavaBuildPipeline extends Construct {
             phases: {
                 install: {
                     "runtime-versions": {
-                        "java": "corretto11"
+                        "java": "corretto17"
                     }
                 },
                 build: {
@@ -67,7 +67,7 @@ export class JavaBuildPipeline extends Construct {
 
         const project = new PipelineProject(this, 'Pipeline', {
             environment: {
-                buildImage: LinuxBuildImage.STANDARD_5_0
+                buildImage: LinuxBuildImage.STANDARD_6_0
             },
             buildSpec: defaultBuildSpec
         });
