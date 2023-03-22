@@ -68,7 +68,7 @@ export class PythonBuildPipeline extends Construct {
 
         const project = new PipelineProject(this, 'Pipeline', {
             environment: {
-                buildImage: LinuxBuildImage.STANDARD_5_0
+                buildImage: LinuxBuildImage.STANDARD_6_0
             },
             buildSpec: defaultBuildSpec
         });
