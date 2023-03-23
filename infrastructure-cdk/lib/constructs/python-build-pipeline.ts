@@ -12,7 +12,7 @@ import {
 import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import {Aws, Duration} from "aws-cdk-lib";
 import {PolicyStatement} from "aws-cdk-lib/aws-iam";
-import {SOURCE_CODE_ZIP} from "../shared-vars";
+import {SOURCE_CODE_ZIP, MANUAL_APPROVAL_REQUIRED} from "../shared-vars";
 
 
 interface PythonBuildPipelineProps {
@@ -107,13 +107,17 @@ export class PythonBuildPipeline extends Construct {
                         input: buildOutput,
                         extract: true
                     })]
-                }, {
-                    stageName: "approval",
-                    actions: [new ManualApprovalAction({
-                        actionName: "Manual"
-                    })]
                 }]
         });
+
+        if (MANUAL_APPROVAL_REQUIRED) {
+            this.pipeline.addStage({
+                stageName: "approval",
+                actions: [new ManualApprovalAction({
+                    actionName: "Manual"
+                })]
+            })
+        }
 
         const versionUpdateFn = new Function(this, 'version-update-fn', {
             code: Code.fromAsset('flink-app-redeploy-hook'),
