@@ -33,7 +33,7 @@ export class ApplicationPipelineStack extends Stack {
                 appName: APPLICATION_NAME,
                 deployBucket: artifactBucket,
                 repositoryName: APPLICATION_NAME,
-                projectRoot: SOURCE_CODE_ZIP.replace(".zip", "") + "/" + APPLICATION_NAME
+                projectRoot: SOURCE_CODE_ZIP.replace(".zip", "") + "/" + APPLICATION_NAME + "-python"
             });
 
         new CfnOutput(this, 'ArtifactBucketName', {
