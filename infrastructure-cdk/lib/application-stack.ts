@@ -1,11 +1,12 @@
-import {Aws, Fn, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
+import {Aws, CustomResource, Duration, Fn, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Bucket} from "aws-cdk-lib/aws-s3";
-import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME} from "./shared-vars";
+import {APPLICATION_NAME, ASSET_BUCKET_EXPORT_NAME, MANUAL_APPROVAL_REQUIRED} from "./shared-vars";
 import {Stream, StreamEncryption, StreamMode} from "aws-cdk-lib/aws-kinesis";
-import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Architecture, Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
 import * as kda from "@aws-cdk/aws-kinesisanalytics-flink-alpha";
 import {ApplicationRuntime} from "./constructs/application-runtime";
+import {Provider} from "aws-cdk-lib/custom-resources";
 
 interface ApplicationStackProps {
     runtime: ApplicationRuntime,
@@ -68,6 +69,32 @@ export class ApplicationStack extends Stack {
         );
 
         stream.grantRead(application);
+
+        if (!MANUAL_APPROVAL_REQUIRED) {
+            // Wait for the build artifact to be initialized
+            const flinkArtifactCreatedHook = new Function(this, 'FlinkArtifactCreatedHook', {
+                runtime: Runtime.PYTHON_3_9,
+                code: Code.fromAsset('./flink-artifact-created-hook'),
+                handler: 'app.on_event',
+                architecture: Architecture.ARM_64,
+                timeout: Duration.minutes(15),
+                environment: {
+                    BUCKET_NAME: assetBucket.bucketName,
+                    FILE_NAME: binaryPath
+                }
+            });
+            assetBucket.grantRead(flinkArtifactCreatedHook);
+
+
+            const flinkArtifactCreatedHookProvider = new Provider(this, 'FlinkArtifactCreatedHookProvider', {
+                onEventHandler: flinkArtifactCreatedHook
+            });
+            const flinkArtifactCreatedHookCustomResource = new CustomResource(this, 'FlinkArtifactCreatedHookCustomResource', {
+                serviceToken: flinkArtifactCreatedHookProvider.serviceToken
+            });
+
+            application.node.addDependency(flinkArtifactCreatedHookCustomResource);
+        }
 
     }
 }
