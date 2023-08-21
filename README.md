@@ -1,4 +1,9 @@
-## Automate deployment and version updates for Amazon Kinesis Data Analytics applications with AWS CodePipeline
+## Automate deployment and version updates for Amazon Managed Service for Apache Flink (formerly Amazon Kinesis Data Analytics) applications with AWS CodePipeline
+
+--------
+>  #### 🚨 August 30, 2023: Amazon Kinesis Data Analytics has been renamed to [Amazon Managed Service for Apache Flink](https://aws.amazon.com/managed-service-apache-flink).
+
+--------
 
 This repository contains sample code for building an example CI/CD pipeline using AWS CodePipeline to automate
 deployment and version updates for Amazon Kinesis Data Analytics application.
